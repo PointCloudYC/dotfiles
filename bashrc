@@ -1,103 +1,149 @@
-source ~/.profile
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
 
-# Bash customisations to be syncronised between machines.
-export PS1='\[\e[1;34m\][\u@\h \W]\$\[\e[0m\] '
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
-# History
-export HISTCONTROL=erasedups	# when adding an item to history, delete itentical commands upstream
-export HISTSIZE=10000		# save 10000 items in history
-shopt -s histappend		# append history to ~\.bash_history when exiting shell
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
 
-# Lazy aliases
-alias l='ls -l'
-alias la='ls -Al'
-alias ..='cd ..'
-alias tree='tree -C'
-alias trls='tree -C | less -R'	# -C outputs colour, -R makes less understand color
-alias mode='(set -o | grep emacs.*on >/dev/null 2>&1 && echo "emacs mode" || echo "vi mode")'
+# append to the history file, don't overwrite it
+shopt -s histappend
 
-# Rails aliases
-alias sc='./script/console'
-alias sg='./script/generate'
-alias ss='./script/server'
-alias sp='./script/server -e production'
-alias t='rake spec'
-alias ta='autotest -rails'
-alias m='rake db:migrate'
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
 
-# node
-alias nombom="rm -rf node_modules && npm cache clean && npm i && rm -rf bower_components && bower cache clean && bower i && rm -rf tmp"
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
 
-# SVN aliases
-alias svnadd="svn st | grep '^\?' | awk '{print $2}' | xargs svn add"
-alias svnrmd="svn st | grep '^\!' | awk '{print $2}' | xargs svn rm"
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
 
-# git aliases
-alias g='git'
-# http://stackoverflow.com/a/15009611/128850
-[ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion
-__git_complete g __git_main
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-# Vim aliases
-alias rvim='mvim --remote-silent '
-
-# Set terminal colors when launching screen
-alias tmux="TERM=screen-256color-bce tmux"
-
-# Functions
-# Fuzzy cd
-# Usage:
-#    cdf public
-# Changes to repos-public directory.
-# http://dpaste.org/P59h/
-function cdf() {
-  cd *$1*/
-}
-
-# Reload .bashrc
-alias refresh='. ~/.bashrc'
-
-export PATH=/Applications/Postgres.app/Contents/MacOS/bin:$PATH
-
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-
-function ps1_branch {
-  b=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-  if [ -n "$b" ]; then echo " $b"; fi
-}
-
-black="\[\e[30m\]"
-red="\[\e[31m\]"
-green="\[\e[32m\]"
-yellow="\[\e[33m\]"
-blue="\[\e[34m\]"
-magenta="\[\e[35m\]"
-cyan="\[\e[36m\]"
-white="\[\e[37m\]"
-reset="\[\e[0m\]"
-
-export PS1="${yellow}» $blue\W$magenta\$(ps1_branch)\n$yellow\$$reset "
-
-# Add the following to your ~/.bashrc or ~/.zshrc
-#
-# Alternatively, copy/symlink this file and source in your shell.  See `hitch --setup-path`.
-
-hitch() {
-  command hitch "$@"
-  if [[ -s "$HOME/.hitch_export_authors" ]] ; then source "$HOME/.hitch_export_authors" ; fi
-}
-alias unhitch='hitch -u'
-
-# Uncomment to persist pair info between terminal instances
-# hitch
-
-# Set up https://hub.github.com/:
-eval "$(hub alias -s)"
-
-export JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
-
-if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-else
-  export VISUAL="nvim"
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/yinchao/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/yinchao/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/yinchao/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/yinchao/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+# alias
+alias jupyter-notebook="jupyter notebook --no-browser --port=8001 --ip=127.0.0.1"
+alias jupyter="jupyter notebook --no-browser --port=8001 --ip=127.0.0.1"
+
+# Use Neovim as "preferred editor"
+export VISUAL=nvim
+alias nv=nvim
+alias neovim=nvim
+
+# Use Neovim instead of Vim or Vi
+alias vim=nvim
+alias vi=nvim
+
+# set nvim vars
+export VIMCONFIG=~/.config/nvim
+export VIMDATA=~/.local/share/nvim
